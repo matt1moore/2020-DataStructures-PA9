@@ -11,7 +11,7 @@
 #include <gtest/gtest.h>
 #include "array_list.h"
 #include "rbt_collection.h"
-
+#include <cmath>
 
 using namespace std;
 
@@ -343,6 +343,158 @@ TEST(BasicListTest, RemoveRebalanceChecksLeftCases) {
 //
 //----------------------------------------------------------------------
 
+// ~~~~~~~~~~~~~~~~ ADDED TEST # 1 ~~~~~~~~~~~~~~~~~~~~
+//   (1) Add the mirror image case for AddRebalanceCheckLeftCases in
+//       a new unit test called AddRebalanceCheckRightCases
+TEST(RBTCollectionTest, AddRebalanceChecRightCases) {
+  RBTCollection<string,int> c;
+  c.add("a",10);
+  ASSERT_EQ(1,c.size());
+  ASSERT_EQ(1,c.height());
+  c.add("b",20);
+  ASSERT_EQ(2,c.size());
+  ASSERT_EQ(2,c.height());
+  c.add("c",30);
+  ASSERT_EQ(3,c.size());
+  ASSERT_EQ(2,c.height());
+  c.add("d",30);
+  ASSERT_EQ(4,c.size());
+  ASSERT_EQ(3,c.height());
+  c.add("e",30);
+  ASSERT_EQ(5,c.size());
+  ASSERT_EQ(3,c.height());
+  c.add("f",30);
+  ASSERT_EQ(6,c.size());
+  ASSERT_EQ(4,c.height());
+  c.add("h",30);
+  ASSERT_EQ(7,c.size());
+  ASSERT_EQ(4,c.height());
+  c.add("g",30);
+  ASSERT_EQ(8,c.size());
+  ASSERT_EQ(4,c.height());
+  
+  ASSERT_EQ(true, c.valid_rbt());
+}
+
+// ~~~~~~~~~~~~~~~~ ADDED TEST # 2 ~~~~~~~~~~~~~~~~~~~~
+//   (2) Add the mirror image case for RemoveRebalanceChecksLeftCases in
+//       a new unit test called RemoveRebalanceChecksRightCases
+TEST(RBTCollectionTest, RemoveRebalanceRightCases) {
+  // case 3: "outside left"
+  RBTCollection<string,int> c1;
+  c1.add("c", 20);
+  c1.add("b", 10);
+  c1.add("d", 30);
+  c1.add("a", 40);
+  ASSERT_EQ(4, c1.size());
+  ASSERT_EQ(3, c1.height());
+  c1.remove("d");
+  ASSERT_EQ(3, c1.size());
+  ASSERT_EQ(2, c1.height());
+  ASSERT_EQ(true, c1.valid_rbt());
+  // case 4: "inside left"
+  RBTCollection<string,int> c2;
+  c2.add("c", 20);
+  c2.add("a", 10);
+  c2.add("d", 40);
+  c2.add("b", 30);
+  ASSERT_EQ(4, c2.size());
+  ASSERT_EQ(3, c2.height());
+  c2.remove("d");
+  ASSERT_EQ(3, c2.size());
+  ASSERT_EQ(2, c2.height());
+  ASSERT_EQ(true, c2.valid_rbt());
+  // case 1: red child not along path
+  RBTCollection<string,int> c3;
+  c3.add("e", 30);
+  c3.add("c", 20);
+  c3.add("f", 50);
+  c3.add("b", 10);
+  c3.add("d", 40);
+  c3.add("g", 60);
+  c3.add("a", 70);
+  ASSERT_EQ(7, c3.size());
+  ASSERT_EQ(4, c3.height());
+  c3.remove("f");
+  ASSERT_EQ(6, c3.size());
+  ASSERT_EQ(3, c3.height());
+  ASSERT_EQ(true, c3.valid_rbt());
+  // case 2: color flip
+  RBTCollection<string,int> c4;
+  for (int i = 0; i <= 17; ++i) {
+    string s = "";
+    s += (char)(114 - i);
+    c4.add(s, i+10);
+  }
+  ASSERT_EQ(18, c4.size());
+  ASSERT_EQ(6, c4.height());
+  c4.remove("q");
+  ASSERT_EQ(17, c4.size());
+  ASSERT_EQ(6, c4.height());  
+  ASSERT_EQ(true, c4.valid_rbt()); 
+}
+
+// ~~~~~~~~~~~~~~~~ ADDED TEST # 3 ~~~~~~~~~~~~~~~~~~~~
+TEST(RBTCollectionTest, LargeInputRightAddRemove) {
+  RBTCollection<int,int> c;
+  int LARGE_NUM = 10; 
+  // Adding then removing a Large Amount of input to build a very right heavy tree 
+  // Confirm that the tree remains valid and elements are being correctly removed and added
+  /*
+    As, we discussed in class, we can test the height of the tree using the maximum capacity 
+	that a red-black tree can reach with the equation 2 * log(i+1) for all elements except for 1.
+  */
+  for (int i = 0; i < LARGE_NUM; ++i) {
+	ASSERT_EQ(i,c.size()); 
+    c.add(i,10);
+	if (i > 0) {
+	  ASSERT_LE(c.height(), 2 * log2(i + 1));
+	}
+	// Checks if the tree remains valid for every value of the red black tree added
+	ASSERT_EQ(true,c.valid_rbt());
+  }
+  
+  for (int i = LARGE_NUM - 1; i >= 0; --i) {
+	c.remove(i);
+	ASSERT_EQ(i,c.size());
+	if (i > 0) {
+	  ASSERT_LE(c.height(),2*log2(i+1));
+	}
+	cout << i << endl; 
+	ASSERT_EQ(true,c.valid_rbt());
+  }
+}
+
+// ~~~~~~~~~~~~~~~~ ADDED TEST # 4 ~~~~~~~~~~~~~~~~~~~~
+TEST(RBTCollectionTest, LargeInputLeftAddRemove) {
+  RBTCollection<int,int> c;
+  int LARGE_NUM = 10;
+  // Adding then removing a Large Amount of input to build a very left heavy tree 
+  // Confirm that the tree remains valid and elements are being correctly removed and added
+  /*
+    As, we discussed in class, we can test the height of the tree using the maximum capacity 
+	that a red-black tree can reach with the equation 2 * log(i+1) for all elements except for 1.
+  */
+  for (int i = LARGE_NUM; i >= 0; --i) {
+	ASSERT_EQ(LARGE_NUM - i,c.size()); 
+    c.add(i,10);
+	if (i < LARGE_NUM) {
+	  ASSERT_LE(c.height(), 2 * log2(LARGE_NUM - i + 1));
+	}
+	// Checks if the tree remains valid for every value of the red black tree added
+	ASSERT_EQ(true,c.valid_rbt());
+  }
+  
+  for (int i = 0; i <= LARGE_NUM; ++i) {
+	c.remove(i);
+	ASSERT_EQ(LARGE_NUM - i,c.size());
+	if (i < LARGE_NUM) {
+	  ASSERT_LE(c.height(),2 * log2(LARGE_NUM - i + 1));
+	}
+	cout << i << endl; 
+	ASSERT_EQ(true,c.valid_rbt());
+  }
+}
 
 int main(int argc, char** argv)
 {
