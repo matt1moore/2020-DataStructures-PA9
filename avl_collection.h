@@ -266,8 +266,29 @@ AVLCollection<K,V>::add(Node* subtree_root, const K& a_key, const V& a_val)
 	}
   }
   // Backtracking actions: add one to every node back up the path to the root
-  subtree_root->height = height(subtree_root);
-  // Backtracking: rebalance at the subtree_root (as needed)
+  if (subtree_root->right && subtree_root->left) {
+    // If both subtrees exist then we check both of their heights
+	if (subtree_root->right->height == subtree_root->height || subtree_root->left->height == subtree_root->height) {
+      // If this is true then we know we need to add one to the height
+	  ++subtree_root->height;
+	}
+  }
+  else if (subtree_root->right) {
+    // Only the right subtree exists so lets check its height
+	if (subtree_root->right->height == subtree_root->height) {
+	  ++subtree_root->height;
+	}
+  }
+  else if (subtree_root->left) {
+    // Only the left subtree exists so lets check its height
+	if (subtree_root->left->height == subtree_root->height) {
+	  ++subtree_root->height;
+	}
+  }
+  else {
+    // Base case of a leaf node
+	// This node has initially been given a height of 1 so we are good
+  }
   return rebalance(subtree_root);
 }
 template<typename K, typename V>
@@ -302,7 +323,7 @@ AVLCollection<K,V>::remove(Node* subtree_root, const K& a_key)
       // Assigning value to subtree_root to get reconnected to end of tree
 	  subtree_root = tmp;
 	}
-	else if (height(subtree_root) == 2 && (subtree_root->right == nullptr || subtree_root->left == nullptr)) {
+	else if (subtree_root->right == nullptr || subtree_root->left == nullptr) {
 	  // CASE 2: Single Child Case
 	  if (subtree_root->right == nullptr) {
 	    // Tells us that only the left subtree exists
@@ -337,8 +358,10 @@ AVLCollection<K,V>::remove(Node* subtree_root, const K& a_key)
 	  // Initially go to the right
 	  tmp = subtree_root->right; 
 	  // Traverse left until the left most node is reached
-	  while (tmp->left != nullptr) {
-	    tmp = tmp->left;
+	  if (tmp == nullptr) {
+	    while (tmp->left != nullptr) {
+	      tmp = tmp->left;
+	    }
 	  }
 	  // Copy over the values of this node
 	  subtree_root->key = tmp->key;
@@ -347,10 +370,35 @@ AVLCollection<K,V>::remove(Node* subtree_root, const K& a_key)
 	  subtree_root->right = remove(subtree_root->right,tmp->key); 
 	}
   }
-  if (subtree_root) {
-    // Confirm that all heights are updated back up the path
-    subtree_root->height = height(subtree_root);
+  // Backtracking actions: add one to every node back up the path to the root
+  if (!subtree_root) {
+    // Case of the deleted node, so do nothing
   }
+  else if (subtree_root->right && subtree_root->left) {
+    // If both subtrees exist then we check both of their heights
+	if (subtree_root->right->height == subtree_root->height || subtree_root->left->height == subtree_root->height) {
+      // If this is true then we know we need to add one to the height
+	  --subtree_root->height;
+	}
+  }
+  else if (subtree_root->right) {
+    // Only the right subtree exists so lets check its height
+	if (subtree_root->right->height == subtree_root->height) {
+	  --subtree_root->height;
+	}
+  }
+  else if (subtree_root->left) {
+    // Only the left subtree exists so lets check its height
+	if (subtree_root->left->height == subtree_root->height) {
+	  --subtree_root->height;
+	}
+  }
+  else {
+    // Base case of a leaf node
+	// This is the node that is now becoming a leaf node so set the height to one
+	subtree_root->height = 1;
+  }
+  
   return rebalance(subtree_root);
 
 }
@@ -390,7 +438,7 @@ size_t AVLCollection<K,V>::height(const Node* subtree_root) const
 {
   size_t left, right;
 
-  if (subtree_root == NULL) {
+  if (!subtree_root) {
     return 0;
   }
   else {
@@ -469,8 +517,7 @@ AVLCollection<K,V>::rebalance(Node* subtree_root)
 	// Finally adjust the height
 	subtree_root->height = height(subtree_root);
 	subtree_root->left->height = height(subtree_root->left);
-	subtree_root->right->height = height(subtree_root->right); 
-	
+	subtree_root->right->height = height(subtree_root->right);
   }
   else if (!lptr && rptr && rptr->height > 1) {
     // SPECIAL CASE: right but no left pointer
@@ -491,8 +538,8 @@ AVLCollection<K,V>::rebalance(Node* subtree_root)
 	subtree_root = rotate_left(subtree_root);
 	// Adjust the height
 	subtree_root->height = height(subtree_root);
-	subtree_root->left->height = height(subtree_root->left);
 	subtree_root->right->height = height(subtree_root->right); 
+	subtree_root->left->height = height(subtree_root->left);
   }
   else if (lptr && rptr && lptr->height > rptr->height + 1) {
     // REGULAR CASE: left and right pointer exist and subtree is left heavy
@@ -527,7 +574,7 @@ AVLCollection<K,V>::rebalance(Node* subtree_root)
 	  // RIGHT-LEFT CASE: here is a need for a double rotation
 	  subtree_root->right = rotate_right(rptr);
 	}
-	if (rptr->left->height > rptr->right->height) {
+	else if (rptr->left->height > rptr->right->height) {
 	  // RIGHT-LEFT CASE: here is a need for a double rotation
 	  subtree_root->right = rotate_right(rptr);
 	}
@@ -535,8 +582,8 @@ AVLCollection<K,V>::rebalance(Node* subtree_root)
 	subtree_root = rotate_left(subtree_root);
 	// Adjust the height
 	subtree_root->height = height(subtree_root);
-	subtree_root->left->height = height(subtree_root->left);
 	subtree_root->right->height = height(subtree_root->right); 
+	subtree_root->left->height = height(subtree_root->left);
   }
   return subtree_root;
 }

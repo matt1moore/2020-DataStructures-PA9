@@ -470,7 +470,7 @@ TEST(RBTCollectionTest, LargeInputRightAddRemove) {
 // ~~~~~~~~~~~~~~~~ ADDED TEST # 4 ~~~~~~~~~~~~~~~~~~~~
 TEST(RBTCollectionTest, LargeInputLeftAddRemove) {
   RBTCollection<int,int> c;
-  int LARGE_NUM = 100;
+  int LARGE_NUM = 10000;
   // Adding then removing a Large Amount of input to build a very left heavy tree 
   // Confirm that the tree remains valid and elements are being correctly removed and added
   /*
@@ -503,7 +503,7 @@ TEST(RBTCollectionTest, LargeInputLeftAddRemove) {
 // ~~~~~~~~~~~~~~~~ ADDED TEST # 5 ~~~~~~~~~~~~~~~~~~~~
 TEST(RBTCollectionTest, LargeInputMiddleAddRemove) {
   RBTCollection<int,int> c;
-  int LARGE_NUM = 100;
+  int LARGE_NUM = 10000;
   int j = 1;
   // Adding then removing a Large Amount of input to build a very middle heavy tree 
   // All elements are being added consistenlty to the Middle portion of the tree
