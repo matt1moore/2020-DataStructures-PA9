@@ -222,7 +222,7 @@ void RBTCollection<K,V>::add(const K& a_key, const V& a_val)
   }
   add_rebalance(newNode);
   root->color = BLACK;
-
+  
 }
 template<typename K, typename V> 
 void RBTCollection<K,V>::remove(const K& a_key)
@@ -330,7 +330,6 @@ void RBTCollection<K,V>::remove(const K& a_key)
   delete sentinel;
   // Decrementing node count for the removed node ?
   --node_count;
-  
 }
 
 template<typename K, typename V> 
@@ -647,11 +646,15 @@ void RBTCollection<K,V>::remove_rebalance(Node* x, bool going_right)
 	  // The sibiling of x does not exist, so we are done
 	  return;
 	}
+	else if (t->color == RED || (x->right->color == RED || x->left->color == RED)) {
+	  // No more cases apply if t is red
+	  return;
+	}
 	else if (t->right && t->left) {
 	  // The sibiling of x has both children
 	  // Note, black has two black children at this point
 	  if (t->right->color == BLACK && t->left->color == BLACK) {
-	    // CASE 2: Color Flip, all children are black !
+	    // CASE 2: Color Flip, all children are black if true !
 	    p->color = BLACK;
 	    t->color = RED;
 	    x->color = RED;
@@ -744,7 +747,7 @@ void RBTCollection<K,V>::remove_rebalance(Node* x, bool going_right)
 	}
 	else {
 	  // Neither of t's children exist, so they are both black nodes
-	  // CASE 2: Color Flip, all children are black !
+	  // CASE 2: Color Flip, all children are black if true !
 	  p->color = BLACK;
 	  t->color = RED;
 	  x->color = RED;
@@ -767,6 +770,10 @@ void RBTCollection<K,V>::remove_rebalance(Node* x, bool going_right)
 	}
 	else if (!t) {
 	  // The sibiling of x does not exist, so we are done
+	  return;
+	}
+	else if (t->color == RED || x->right->color == BLACK) {
+	  // No more cases apply if t is red, or if the children of x are not black
 	  return;
 	}
 	else if (t->right && t->left) {
@@ -866,7 +873,7 @@ void RBTCollection<K,V>::remove_rebalance(Node* x, bool going_right)
 	}
 	else {
 	  // Neither of t's children exist, so they are both black nodes
-	  // CASE 2: Color Flip, all children are black !
+	  // CASE 2: Color Flip, all children are black if true !
 	  p->color = BLACK;
 	  t->color = RED;
 	  x->color = RED;
@@ -891,10 +898,14 @@ void RBTCollection<K,V>::remove_rebalance(Node* x, bool going_right)
 	  // The sibiling of x does not exist, so we are done
 	  return;
 	}
+	else if (t->color == RED || x->left->color == RED) {
+	  // No more cases apply if t is red, or if x's children are not black
+	  return;
+	}
 	else if (t->right && t->left) {
 	  // The sibiling of x has both children
 	  // Note, black has two black children
-	  if (t->right->color == BLACK && t->left->color == BLACK) {
+	  if (t->right->color == BLACK) {
 	    // CASE 2: Color Flip, all children are black !
 	    p->color = BLACK;
 	    t->color = RED;
@@ -1000,6 +1011,10 @@ void RBTCollection<K,V>::remove_rebalance(Node* x, bool going_right)
 	  // The sibiling of x does not exist, so we are done
 	  return; 
 	}
+	else if (t->color == RED) {
+	  // Immediately return since no further cases apply
+	  return;
+	}
 	else if (t->right && t->left) {
 	  // The sibiling of x has both children
 	  // Note, black has two black children
@@ -1103,133 +1118,10 @@ void RBTCollection<K,V>::remove_rebalance(Node* x, bool going_right)
 	  x->color = RED;
 	}
   }
+  //cout << "Rebalance of " << x->key << endl; 
+  //print();
 }
  
-  
- /* 
-  
-  if (x->right != nullptr && x->left != nullptr) {
-    if ((x->right->color == RED || x->left->color == RED) && (x->right->color == BLACK || x->left->color == BLACK)) {
-	  // CASE 1: x has non-navigation red child
-      if (going_right && x->left->color == RED) {
-        // Rotate right and color adjust
-	    rotate_right(x);
-	    // Left child of x becomes the new subtree root
-	    x->parent->color = BLACK;
-	    x->color = RED; 
-	    x->right->color = BLACK; 
-	  }
-	  else if (!going_right && x->right->color == RED) {
-	    // Rotate left and color adjust
-	    rotate_left(x);
-	    // Right child of x becomes the subtree root
-	    x->parent->color = BLACK;
-	    x->color = RED;
-	    x->left->color = BLACK;
-	  }
-    }
-  }
-  else if (t == nullptr) {
-    // No further cases apply to this curr node
-	return;
-  }
-  else if (t->right == nullptr || t->left == nullptr) {
-    // Case 2 & 3 & 4: SPECIAL NULL pointers
-	if (t->right == nullptr && t->left == nullptr) {
-	  // Case 2: Color Flip (null pointers)
-	  // Note the children of x must be black from case 1 check
-	  // Color flip
-	  p->color = BLACK;
-	  t->color = RED;
-	  x->color = RED;
-	}
-	else if (t->right) {
-      // If only the right exists, then we check for the color
-	  if (t->right->color == BLACK) {
-	    // Case 2: Color Flip (null pointers)
-	    // Note the children of x must be black from case 1 check
-	    // Color flip
-	    p->color = BLACK;
-	    t->color = RED;
-	    x->color = RED;
-	  }
-	  else { 
-	    // ~~~~~~~~~~ SPECIAL CASE : Only the right child of t exists and its red ~~~~~~~~~~~~
-		// Case 3 & 4: Of the sibiling having a red child on left or right
-		if (t->key > x->key && t->right->color == RED) {
-		  // Right-left case where t is right child and has a right red child
-		  // Rotate at t, rotate left at p
-		  rotate_right(t);
-		  rotate_left(p);
-		}
-		else {
-		  // Left-right case where t is left child and has a red right child
-		  // Rotate left at t, rotate right at p
-		  rotate_left(t);
-		  rotate_right(p); 
-		}
-      }
-	}
-	else {
-	  // Case of the only the left existing
-	  if (t->left->color == BLACK) {
-	    // Case 2: Color Flip (null pointers)
-	    // Note the children of x must be black from case 1 check
-	    // Color flip
-	    p->color = BLACK;
-	    t->color = RED;
-	    x->color = RED;
-	  }
-	  else {
-	    // ~~~~~~~~~~ SPECIAL CASE : Only the left child of t exists and its red ~~~~~~~~~~~~
-	    // Case 3 & 4: Of the sibiling having a red child on left or right
-		if (t->key > x->key) {
-		  // Must be a right-right case now where t is a right child and has a red left child
-		  // Rotate at t, rotate left at p
-	      rotate_left(p);
-	      t->color = RED;
-	      t->right->color = BLACK;
-		}
-		else {
-		  // Must be a left-left case now where t is a left child and has a red left child
-		  rotate_right(p);
-	      t->color = RED;
-	      t->left->color = BLACK;
-		}
-	  }
-	}
-  }
-  else if (t->right->color == RED || t->left->color == RED) {
-    // Case 3 & 4: Of the sibiling having a red child on left or right
-	if (t->key > x->key && t->right->color == RED) {
-      // Right-left case where t is right child and has a right red child
-	  // Rotate at t, rotate left at p
-	  rotate_right(t);
-	  rotate_left(p);
-	}
-	else if (t->key < x->key && t->right->color == RED) {
-      // Left-right case where t is left child and has a red right child
-	  // Rotate left at t, rotate right at p
-	  rotate_left(t);
-	  rotate_right(p); 
-	}
-	else if (t->key > x->key) {
-	  // Right-right case where t is a right child with a left red child 
-	  rotate_left(p);
-	  t->color = RED;
-	  t->right->color = BLACK;
-	}
-	else {
-	  // Must be a left-left case now where t is a left child and has a red left child
-	  rotate_right(p);
-	  t->color = RED;
-	  t->left->color = BLACK;
-	}
-	p->color = BLACK;
-	x->color = RED; 
-  }
-}
-*/
 
 template<typename K, typename V> 
 size_t RBTCollection<K,V>::height(Node* subtree_root) const
